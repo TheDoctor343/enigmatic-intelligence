@@ -4,8 +4,27 @@ var appDependencies = ['ui.bootstrap'];
 
 var app = angular.module('app', appDependencies);
 
-function ContentController($scope, $http) {
+function check_auth(status_code, $rootScope) {
+	if (status_code === 401) {  // Not logged in
+		swal({   title: "You are not logged in",   text: "You will be redirected to login with your Google Account",   type: "warning",   showCancelButton: true,   confirmButtonColor: "#DD6B55",   confirmButtonText: "Login",   cancelButtonText: "Cancel",   closeOnConfirm: false,   closeOnCancel: false }, function(isConfirm){   if (isConfirm) {    window.location.replace("/login")   } else {     swal("Not Logged In", "You are not logged in", "error");   } });
+
+	} else if (status_code === 403) { // Not Admin
+		swal({   title: "No Permission!",   text: "The Action Requires Admin Privileges",   type: "error",   showConfirmButton: true });
+	}
+}
+
+function ContentController($scope, $http, $rootScope) {
 	
+	/* Dict of allowed states */
+	var STATES = {
+		home: true,
+		search_course: true,
+		view_course: true
+	}
+	
+	$rootScope.user = "wesley";
+	$rootScope.admin = false;
+	$rootScope.logged_in = true;
 	
 	$scope.classes = [
 	{
@@ -77,12 +96,19 @@ function ContentController($scope, $http) {
 	    return decodeURIComponent(results[2].replace(/\+/g, " "));
 	}
 	
-	// on page load
+	/* on page load */
 	var state = getParameterByName('state');
 	var course_id = getParameterByName('course');
+	if (state == undefined) {
+		state = "home";
+	}
+	if (!(state in STATES)) {
+		state = "home";
+	}
 	console.log(state);
 	console.log(course_id)
 	$scope.change_state(state, course_id);
+	
 	
 	
 	// var config = {
@@ -116,6 +142,11 @@ function ContentController($scope, $http) {
 	}
 	
 	$scope.go_search = function () {
+		console.log("search_course");
+		$scope.change_state('search_course');
+	}
+	
+	$scope.go_home = function () {
 		console.log("home");
 		$scope.change_state('home');
 	}
@@ -137,4 +168,44 @@ function ContentController($scope, $http) {
 }
 
 
+function RatingModalController($scope, $http) {
+	
+}
+
+function CourseModalController($scope, $http) {
+	
+	$scope.submit_course = function () {
+		
+		if ($scope.name && $scope.dept && $scope.number) {
+			
+		
+		var config = {
+			method: 'post',
+			url: '/university/list_courses',
+			data: {
+				university: "The Ohio State University",
+				department: $scope.dept,
+				number: $scope.number,
+				name: $scope.name
+			}
+		}
+		
+		$http(config).success(function (data, response, headers) {
+			// Clear fields 
+			$scope.name = "";
+			$scope.dept = "";
+			$scope.number = undefined;
+			$("#courseModal").modal('hide');  //hide modal (using jQuery)
+		}).error(function (data, status, headers) {
+			
+		});
+		
+		}
+	}
+	
+}
+
+angular.module('app').controller('CourseModalController', CourseModalController);
+angular.module('app').controller('RatingModalController', RatingModalController);
 angular.module('app').controller('ContentController', ContentController); 
+

@@ -26,6 +26,10 @@
 		<!-- Latest compiled JavaScript -->
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
+		<!-- Sweet Alert -->
+		<script src="js/sweetalert.min.js"></script>
+		<link rel="stylesheet" href="css/sweetalert.css" />
+
 		<!-- Angular -->
 
 		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
@@ -42,11 +46,19 @@
 	<body ng-app="app">
 		<div ng-controller="ContentController" id="wrapper" class="container-fluid">
 			<div id="banner" class="container">
-				<div id="banner-left" class="col-lg-offset-1 col-lg-5 col-xs-6">
+				<div ng-click="go_home()" id="banner-left" class="col-lg-offset-1 col-lg-5 col-xs-6">
 					<a><img src="img/classr.png" /></a>
 				</div>
 				<div id="banner-right" class="col-lg-4 col-xs-6">
-					<a ng-click="go_search()" id="searchbutton" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Search Courses</a>
+					<div>
+						<a ng-click="go_search()" id="searchbutton" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Search Courses</a>
+					</div>
+					<div ng-show="!logged_in" >
+						<a id="searchbutton" href="/login" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Login</a>
+					</div>
+					<div ng-show="logged_in" >
+						<a id="searchbutton" href="/logout" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Logout</a>
+					</div>
 				</div>
 			</div>
 
@@ -54,7 +66,7 @@
 
 				<!-- All Content In this Div -->
 
-				<!-- Search Course/Home Page -->
+				<!-- Home Page -->
 				<div ng-show="state === 'home'">
 					<div class="jumbotron">
 						<h1 class = "text-primary"> Classr <span class="glyphicon glyphicon-education"> </span></h1>
@@ -62,6 +74,11 @@
 							A student friendly tool that lets you rate college courses
 						<p>
 					</div>
+					<h3><a ng-click="go_search()">Begin your journey by searching for Classes to review</a></h3>
+				</div>
+
+				<!-- Home Page -->
+				<div ng-show="state === 'search_course'">
 					<h1 class="text-primary"><span class="glyphicon glyphicon-search"> </span> Search Courses </h1>
 					<input ng-change="course_search()" ng-model="course_search_bar" type="text" />
 					<table ng-show="courses" class = "table table-striped">
@@ -75,9 +92,9 @@
 					<br />
 
 					<!-- New Course Modal -->
-					<h1 class="text-primary"><span class="glyphicon glyphicon-star"> </span> New Course </h1>
+					<h1 ng-show="admin" class="text-primary"><span class="glyphicon glyphicon-star"> </span> New Course </h1>
 
-					<div class="form-group">
+					<div ng-show="admin" class="form-group">
 						<!-- New rating button -->
 						<button type="button" class="btn btn-default btn-md" data-toggle="modal" data-target="#courseModal">
 							<span class="glyphicon glyphicon-star"></span> Create a new course
@@ -201,7 +218,7 @@
 			<!-- Modals and Crap -->
 
 			<!-- Rating Modal -->
-			<div id="myModal" class="modal fade" role="dialog">
+			<div ng-controller="RatingModalController" id="myModal" class="modal fade" role="dialog">
 				<div class="modal-dialog">
 
 					<!-- Modal Content-->
@@ -250,7 +267,7 @@
 			</div>
 
 			<!-- New Course Modal -->
-			<div id="courseModal" class="modal fade" role="dialog">
+			<div ng-controller="CourseModalController" id="courseModal" class="modal fade" role="dialog">
 				<div class ="modal-small">
 					<div class="modal-dialog">
 						<!-- Modal Content-->
@@ -274,37 +291,37 @@
 								<form>
 									<div class="form-group">
 										<label><span>Department</span><span class="required-star">*</span></label>
-										<input type="text" class="form-control" />
+										<input ng-model="dept" type="text" class="form-control" />
 										<label><span>Number</span><span class="required-star">*</span></label>
-										<input type="number" class="form-control" />
+										<input ng-model="number" type="number" class="form-control" />
 										<label><span>Name</span><span class="required-star">*</span></label>
-										<input type="text" class="form-control" />
+										<input ng-model="name" type="text" class="form-control" />
 									</div>
 								</form>
 								<div class="modal-footer" id="submit">
-									<button type="button" class="btn btn-primary" >
+									<button ng-click="submit_course" type="button" class="btn btn-primary" >
 										Submit
 									</button>
 									<button type="button" class="btn btn-default" data-dismiss="modal">
 										Close
 									</button>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
 
-		<footer class="footer">
-			<div class="container">
-				<p>
-					Classr is an unregistered trademark of the Blue Screens of Life.
-				</p>
-				<p>
-					Classr was created by Wesley Pettit, Alan Zeigler, Michael Mascolino, Pavle Coric, and Zac Gioffre
-				</p>
-			</div>
-		</footer>
+			<footer class="footer">
+				<div class="container">
+					<p>
+						Classr is an unregistered trademark of the Blue Screens of Life.
+					</p>
+					<p>
+						Classr was created by Wesley Pettit, Alan Zeigler, Michael Mascolino, Pavle Coric, and Zac Gioffre
+					</p>
+				</div>
+			</footer>
 
 		</div>
 	</body>

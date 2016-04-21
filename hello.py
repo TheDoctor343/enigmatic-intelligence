@@ -20,7 +20,7 @@ def login_required(handler_method):
 
         else:
 
-            self.response.set_status(401)
+            self.response.set_status(401)  # I'm using 403 for permissions not high enough
 
 
 
@@ -136,7 +136,7 @@ class CourseRequest(webapp2.RequestHandler):
             pass #TODO: Error
 
         course = Course()
-        course.department = body['department']
+        course.department = body['department'].upper()
         course.number = body['number']
         course.name = body['name']
 
@@ -150,6 +150,10 @@ class CourseRequest(webapp2.RequestHandler):
             course.key = course_key
             course.put()
             university.put()
+
+            # Signal that cache is out of date
+            can_use_cache = models.can_cache_courses_key().get()
+            can_use_cache.put()  # it will auto-update-time
             self.response.set_status(201) # 201: Entity Created
 
 
@@ -261,16 +265,49 @@ class RatingRequest(webapp2.RequestHandler):
         		rating.dislikes.append(email)
 
 
+class CanUseCacheRequest(webapp2.RequestHandler):
+    def get(self):
+        """ Is the cache out of date"""
+        can_use_cache = models.can_cache_courses_key().get()
+        obj = models.encode_date_time(can_use_cache.updated_at)
+        self.response.content_type = 'application/json'
+        self.response.out.write(json.dumps(obj))
+
+
+
 class DoStuffForDebug(webapp2.RequestHandler):
     """Its useful for me to have a URL like this during Development"""
     def get(self):
-        pass
-        # Route for debug
-        self.response.out.write("Success!")
+
+        # Cache Model
+        can_use_cache = models.CanCache()
+        can_use_cache.key = models.can_cache_courses_key()
+        can_use_cache.put()
+        # Create OSU
+        university = models.University()
+
+        university.full_name = body['full_name']
+        university.abbrev = body['abbrev']
+        university.city = body['city']
+        university.state = body['state']
+
+        key = models.university_key(body['full_name'])
+        university.key = key
+
+        if key.get():
+            self.response.out.write("OSU already exists!")
+        else:
+            university.put()
+            self.response.out.write("Success!")
+
 
 class Logout(webapp2.RequestHandler):
     def get(self):
         self.redirect(users.create_logout_url('/'))
+
+class Login(webapp2.RequestHandler):
+    def get(self):
+        self.redirect(users.create_login_url('/'))
 
 
 
@@ -280,5 +317,6 @@ app = webapp2.WSGIApplication([
     ('/university/list_courses', CourseRequest),
     ('/course/rating', RatingRequest),
     ('/dostuff', DoStuffForDebug),
+    ('/login', Login),
     ('/logout', Logout)
 ], debug=True)
