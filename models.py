@@ -17,13 +17,15 @@ def course_key(key_id):
 	return ndb.Key("Course", key_id)
 
 def can_cache_courses_key():
-	"""Only one key"""
+	"""Only one key for list of courses"""
 	return ndb.Key("CanCache", 1)
 
 
 class CanCache(ndb.Model):
-	""" Super brilliant Idea: Course list will change very infrequently, so store the date it was last updated.
+	""" Super brilliant Idea: Lots of things will change very infrequently, so store the date it was last updated.
 	If it wasn't updated, then list is cached client side.
+	The benefit of this is in drastically reduces Data-Store Reads
+	Reduce DB Reads => Save Money
 	"""
 	updated_at = ndb.DateTimeProperty(auto_now=True)
 

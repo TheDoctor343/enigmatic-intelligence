@@ -4,6 +4,33 @@ from google.appengine.api import users
 import json
 import logging
 
+admininstrators = {
+    "wes.d.pettit@gmail.com": True
+}
+
+def is_admin(email):
+    return admininstrators.get(email)
+
+def admin_required(handler_method):
+
+
+    def wrapper(self, *args, **kwargs):
+
+        user = users.get_current_user()
+
+        if user and is_admin(user.email()):
+
+            # Google login
+
+            handler_method(self, *args, **kwargs)
+
+        else:
+
+            self.response.set_status(403)  # I'm using 403 for permissions not high enough
+
+
+
+    return wrapper
 
 def login_required(handler_method):
 
@@ -19,7 +46,7 @@ def login_required(handler_method):
             handler_method(self, *args, **kwargs)
 
         else:
-
+            # 401 = Not logged in
             self.response.set_status(401)  # I'm using 403 for permissions not high enough
 
 
@@ -70,12 +97,13 @@ class UniversityRequest(webapp2.RequestHandler):
 
         user = users.get_current_user()
         data['user'] = user.email() if user else None
+        data['admin'] = is_admin(user.email()) if user else False
 
         data['universities'] = obj
         self.response.content_type = 'application/json'
         self.response.out.write(json.dumps(data))
 
-    @login_required
+    @admin_required
     def post(self):
         """ Create a University """
         body = json.loads(self.request.body)
@@ -115,10 +143,11 @@ class CourseRequest(webapp2.RequestHandler):
         user = users.get_current_user()
         data = {}
         data['user'] = user.email() if user else None
+        data['admin'] = is_admin(user.email()) if user else False
 
         for course_key in university.courses:
             course = course_key.get()
-            course_json = dict(department=course.department, number=course.number, name=course.name, id=course.key.id)
+            course_json = dict(department=course.department, number=course.number, name=course.name, id=course.key.id())
             obj.append(course_json)
 
         data['courses'] = obj
@@ -126,7 +155,7 @@ class CourseRequest(webapp2.RequestHandler):
         self.response.content_type = 'application/json'
         self.response.out.write(json.dumps(data))
 
-    @login_required
+    @admin_required
     def post(self):
         """ Create a Course """
         body = json.loads(self.request.body)
@@ -135,12 +164,12 @@ class CourseRequest(webapp2.RequestHandler):
         if not university:
             pass #TODO: Error
 
-        course = Course()
+        course = models.Course()
         course.department = body['department'].upper()
         course.number = body['number']
         course.name = body['name']
 
-        course_key = models.course_key(course_id(dept=body['department'], number=body['number']))
+        course_key = models.course_key(models.course_id(dept=body['department'].upper(), number=body['number']))
 
         university.courses.append(course_key)
 
@@ -174,8 +203,11 @@ class RatingRequest(webapp2.RequestHandler):
         grade = 0    # grade is optional
         grades = 0
 
+        obj = {}
+
         user = users.get_current_user()
         obj['user'] = user.email() if user else None
+        obj['admin'] = is_admin(user.email()) if user else False
 
         for rating_key in course.ratings:
             rating = rating_key.get()
@@ -194,11 +226,11 @@ class RatingRequest(webapp2.RequestHandler):
                     rating_json['disliked_this'] = True
 
             ratings.append(rating_json)
-
-        easiness = easiness/len(course.ratings)
-        recommend = recommend/len(course.ratings)
-        interesting = interesting/len(course.ratings)
-        grade = grade/grades
+        if len(course.ratings) > 0:
+            easiness = easiness/len(course.ratings)
+            recommend = recommend/len(course.ratings)
+            interesting = interesting/len(course.ratings)
+            grade = grade/grades
         obj = dict(department=course.department, number=course.number, name=course.name, easiness=easiness, interesting=interesting, recommend=recommend, raters=course.raters)
         obj['ratings'] = ratings
 
@@ -227,6 +259,10 @@ class RatingRequest(webapp2.RequestHandler):
         rating.book = body['book']
 
         user = users.get_current_user()
+
+        if user.email() in course.raters:
+            # User has already rated
+            self.abort(409, detail="You have already rated")
 
         rating.user_email = user.email()
 
@@ -269,7 +305,14 @@ class CanUseCacheRequest(webapp2.RequestHandler):
     def get(self):
         """ Is the cache out of date"""
         can_use_cache = models.can_cache_courses_key().get()
-        obj = models.encode_date_time(can_use_cache.updated_at)
+
+        obj = {}
+        obj['updated_at'] = models.encode_date_time(can_use_cache.updated_at)
+
+        user = users.get_current_user()
+        obj['user'] = user.email() if user else None
+        obj['admin'] = is_admin(user.email()) if user else False
+
         self.response.content_type = 'application/json'
         self.response.out.write(json.dumps(obj))
 
@@ -286,12 +329,12 @@ class DoStuffForDebug(webapp2.RequestHandler):
         # Create OSU
         university = models.University()
 
-        university.full_name = body['full_name']
-        university.abbrev = body['abbrev']
-        university.city = body['city']
-        university.state = body['state']
+        university.full_name = "The Ohio State University"
+        university.abbrev = "OSU"
+        university.city = "Columbus"
+        university.state = "Ohio"
 
-        key = models.university_key(body['full_name'])
+        key = models.university_key("The Ohio State University")
         university.key = key
 
         if key.get():
@@ -314,7 +357,7 @@ class Login(webapp2.RequestHandler):
 app = webapp2.WSGIApplication([
     ('/', MainPage),
     ('/university', UniversityRequest),
-    ('/university/list_courses', CourseRequest),
+    ('/university/courses', CourseRequest),
     ('/course/rating', RatingRequest),
     ('/dostuff', DoStuffForDebug),
     ('/login', Login),

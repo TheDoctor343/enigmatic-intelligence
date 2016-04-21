@@ -114,7 +114,7 @@
 					<!-- Pooled average ratings -->
 
 					<div class="row" id="course-bars">
-						<div ng-if="course.ratings">
+						<div ng-if="course.ratings.length > 0">
 							<div class="col-sm-4">
 								<strong>Easiness: </strong>
 								<br>
@@ -291,15 +291,15 @@
 								<form>
 									<div class="form-group">
 										<label><span>Department</span><span class="required-star">*</span></label>
-										<input ng-model="dept" type="text" class="form-control" />
+										<input ng-model="new_course.dept" type="text" class="form-control" />
 										<label><span>Number</span><span class="required-star">*</span></label>
-										<input ng-model="number" type="number" class="form-control" />
+										<input ng-model="new_course.number" type="number" class="form-control" />
 										<label><span>Name</span><span class="required-star">*</span></label>
-										<input ng-model="name" type="text" class="form-control" />
+										<input ng-model="new_course.name" type="text" class="form-control" />
 									</div>
 								</form>
 								<div class="modal-footer" id="submit">
-									<button ng-click="submit_course" type="button" class="btn btn-primary" >
+									<button ng-click="submit_course()" type="button" class="btn btn-primary" >
 										Submit
 									</button>
 									<button type="button" class="btn btn-default" data-dismiss="modal">
