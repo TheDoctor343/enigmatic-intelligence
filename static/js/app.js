@@ -5,145 +5,183 @@ var appDependencies = ['ui.bootstrap'];
 var app = angular.module('app', appDependencies);
 
 function check_auth(status_code, $rootScope) {
-	if (status_code === 401) {  // Not logged in
-		swal({   title: "You are not logged in",   text: "You will be redirected to login with your Google Account",   type: "warning",   showCancelButton: true,   confirmButtonColor: "#DD6B55",   confirmButtonText: "Login",   cancelButtonText: "Cancel",   closeOnConfirm: false,   closeOnCancel: false }, function(isConfirm){   if (isConfirm) {    window.location.replace("/login")   } else {     swal("Not Logged In", "You are not logged in", "error");   } });
+	if (status_code === 401) {// Not logged in
+		swal({
+			title : "You are not logged in",
+			text : "You will be redirected to login with your Google Account",
+			type : "warning",
+			showCancelButton : true,
+			confirmButtonColor : "#DD6B55",
+			confirmButtonText : "Login",
+			cancelButtonText : "Cancel",
+			closeOnConfirm : false,
+			closeOnCancel : false
+		}, function(isConfirm) {
+			if (isConfirm) {
+				window.location.replace("/login")
+			} else {
+				swal("Not Logged In", "You are not logged in", "error");
+			}
+		});
 		$rootScope.logged_in = false;
-	} else if (status_code === 403) { // Not Admin
-		swal({   title: "No Permission!",   text: "The Action Requires Admin Privileges",   type: "error",   showConfirmButton: true });
+	} else if (status_code === 403) {// Not Admin
+		swal({
+			title : "No Permission!",
+			text : "The Action Requires Admin Privileges",
+			type : "error",
+			showConfirmButton : true
+		});
 		$rootScope.admin = false;
 	}
 }
 
 function ContentController($scope, $http, $rootScope) {
-	
+
 	/* Dict of allowed states */
 	var STATES = {
-		home: true,
-		search_course: true,
-		view_course: true
+		home : true,
+		search_course : true,
+		view_course : true
 	}
 
-	
 	// Change what 'page' we are on
-	$scope.change_state = function (state, data) {
+	$scope.change_state = function(state, data) {
 		console.log(state);
 		console.log(data);
-		var stateObj = { page: state, data: data}
-		var url = '?state='+state;
+		var stateObj = {
+			page : state,
+			data : data
+		}
+		var url = '?state=' + state;
 		if (state === "view_course" && data !== undefined) {
-			url += "&course="+data
-			getCourse(data); // get Course
+			url += "&course=" + data
+			getCourse(data);
+			// get Course
 		} else if (state === "view_course" && !data) {
 			// an error must have occurred - redirect home
 			state = "home";
-			url = '?state='+state;
+			url = '?state=' + state;
 		}
 		history.pushState(stateObj, "CLASSR", url)
 		$scope.state = state;
-		
+
 		if (state == "search_course") {
-			$scope.classes = [];
+			$rootScope.classes = [];
 			listCourses()
 		}
 	}
-	
 	function getCourse(course_id) {
 		/* Check Cache First */
-		
+
 		//TODO: Cache
-		
+
 		var config = {
-			method: 'get',
-			url: '/course/rating',
-			params: {
-				course_id: course_id
+			method : 'get',
+			url : '/course/rating',
+			params : {
+				course_id : course_id
 			}
 		}
-		
-		$http(config).success(function (data) {
+
+		$http(config).success(function(data) {
 			$scope.course = data
-			
+
 			$rootScope.user = data['user'];
 			$rootScope.admin = data['admin'];
-			
+
 			if (data['user']) {
 				$rootScope.logged_in = true;
 			} else {
 				$rootScope.logged_in = false;
 			}
-			
-		}).error(function () {
-			swal({   title: "Sorry!",   text: "Error: Could not find "+course_id,   type: "error",   showConfirmButton: true });
+
+		}).error(function() {
+			swal({
+				title : "Sorry!",
+				text : "Error: Could not find " + course_id,
+				type : "error",
+				showConfirmButton : true
+			});
 		});
 	}
-	
+
 	function listCourses() {
 		/* First Check cache */
 		//TODO: Check
-		
+
 		/* Get Class List */
 		var config = {
-			method: 'get',
-			url: '/university/courses',
-			params: {
-				university: "The Ohio State University"
+			method : 'get',
+			url : '/university/courses',
+			params : {
+				university : "The Ohio State University"
 			}
 		}
-		
-		$http(config).success(function (data) {
-			$scope.classes = data['courses'];
+
+		$http(config).success(function(data) {
+			$rootScope.classes = data['courses'];
 			$rootScope.user = data['user'];
 			$rootScope.admin = data['admin'];
-			
+
+			/* Add to Cache */
+			localStorage.setItem('classes', JSON.stringify(data['courses']))
+			localStorage.setItem('classes_cached', new Date());
+
 			if (data['user']) {
 				$rootScope.logged_in = true;
 			} else {
 				$rootScope.logged_in = false;
 			}
-			
-		}).error(function () {
-			swal({   title: "Error!",   text: "An Unknown Error Occurred",   type: "error",   showConfirmButton: true });
+
+		}).error(function() {
+			swal({
+				title : "Error!",
+				text : "An Unknown Error Occurred",
+				type : "error",
+				showConfirmButton : true
+			});
 
 		});
 	}
-	
+
 	// Make the back and forward buttons work
-	window.onpopstate = function (event) {
+	window.onpopstate = function(event) {
 		console.log(event.state);
 		$scope.state = event.state.page;
 		console.log($scope.state);
-		
+
 		if (event.state.data) {
-			
+
 		}
-		$scope.$apply();  // this is necessary for angular to update the view
+		$scope.$apply();
+		// this is necessary for angular to update the view
 	}
-	
-	function getParameterByName(name) { //found on SO
+	function getParameterByName(name) {//found on SO
 		var url = window.location.href;
-	    name = name.replace(/[\[\]]/g, "\\$&");
-	    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-	        results = regex.exec(url);
-	    if (!results) return undefined;
-	    if (!results[2]) return '';
-	    return decodeURIComponent(results[2].replace(/\+/g, " "));
+		name = name.replace(/[\[\]]/g, "\\$&");
+		var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+		    results = regex.exec(url);
+		if (!results)
+			return undefined;
+		if (!results[2])
+			return '';
+		return decodeURIComponent(results[2].replace(/\+/g, " "));
 	}
-	
-	
+
 	function init() {
 		var state = getParameterByName('state');
 		var course_id = getParameterByName('course');
 		if (state == undefined) {
 			state = "home";
 		}
-		if (!(state in STATES)) {
+		if (!( state in STATES)) {
 			state = "home";
 		}
 		console.log(state);
 		console.log(course_id)
 		$scope.change_state(state, course_id);
 	}
-	
+
 	/* On Page Load */
 	init();
 
@@ -168,80 +206,93 @@ function ContentController($scope, $http, $rootScope) {
 			return false;
 		}
 	}
-	
-	$scope.go_search = function () {
+
+
+	$scope.go_search = function() {
 		console.log("search_course");
 		$scope.change_state('search_course');
 	}
-	
-	$scope.go_home = function () {
+
+	$scope.go_home = function() {
 		console.log("home");
 		$scope.change_state('home');
 	}
 
-	$scope.make_percent = function (val) {
-		var width = val*10 +"%"
+	$scope.make_percent = function(val) {
+		var width = val * 10 + "%"
 		return {
-			width: width
+			width : width
 		}
 	}
 
 	$scope.course_search = function() {
-		$scope.courses = $scope.classes.filter(filter_courses);
+		$scope.courses = $rootScope.classes.filter(filter_courses);
 	}
-	
-	$scope.view_course = function (course_id) {
+
+	$scope.view_course = function(course_id) {
 		$scope.change_state('view_course', course_id);
 	}
-	
-	
 }
 
-
 function RatingModalController($scope, $http) {
-	
+
 }
 
 function CourseModalController($scope, $http, $rootScope) {
 	console.log("Course Modal Controller Active");
-	
-	$scope.submit_course = function () {
+
+	$scope.submit_course = function() {
 		console.log("submit");
-		
+
 		if ($scope.new_course.name && $scope.new_course.dept && $scope.new_course.number) {
-			
-		
+
 			var config = {
-				method: 'post',
-				url: '/university/courses',
-				data: {
-					university: "The Ohio State University",
-					department: $scope.new_course.dept.toUpperCase(),
-					number: $scope.new_course.number,
-					name: $scope.new_course.name
+				method : 'post',
+				url : '/university/courses',
+				data : {
+					university : "The Ohio State University",
+					department : $scope.new_course.dept.toUpperCase(),
+					number : $scope.new_course.number,
+					name : $scope.new_course.name
 				}
 			}
-			
-			$http(config).success(function (data, response, headers) {
-				// Clear fields 
+
+			$http(config).success(function(data, response, headers) {
+				/* Add to class list so that we don't have to refresh the page */
+				var new_course = {
+					department : $scope.new_course.dept.toUpperCase(),
+					number : $scope.new_course.number,
+					name : $scope.new_course.name,
+					id : $scope.new_course.dept.toUpperCase() + $scope.new_course.number
+				}
+
+				$rootScope.classes.push(new_course);
+
+				// Clear fields
 				$scope.new_course.name = "";
 				$scope.new_course.dept = "";
 				$scope.new_course.number = undefined;
-				$("#courseModal").modal('hide');  //hide modal (using jQuery)
-			}).error(function (data, status, headers) {
+				$("#courseModal").modal('hide');
+				//hide modal (using jQuery)
+			}).error(function(data, status, headers) {
 				check_auth(status, $rootScope);
-				if (status == 409) { // conflict
-					swal({   title: "Conflict!",   text: "Course Already Exists",   type: "error",   showConfirmButton: true });
+				if (status == 409) {// conflict
+					swal({
+						title : "Conflict!",
+						text : "Course Already Exists",
+						type : "error",
+						showConfirmButton : true
+					});
 
 				}
 			});
-			
+
 		}
 	}
-	
 }
+
 
 angular.module('app').controller('CourseModalController', CourseModalController);
 angular.module('app').controller('RatingModalController', RatingModalController);
-angular.module('app').controller('ContentController', ContentController); 
+angular.module('app').controller('ContentController', ContentController);
 

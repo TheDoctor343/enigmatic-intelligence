@@ -177,6 +177,10 @@ class CourseRequest(webapp2.RequestHandler):
             self.abort(409, detail="Course already exists") # 409: Conflict
         else:
             course.key = course_key
+
+            """ Create a Cache Object for this Course """
+            # TODO: Create
+
             course.put()
             university.put()
 
@@ -361,5 +365,6 @@ app = webapp2.WSGIApplication([
     ('/course/rating', RatingRequest),
     ('/dostuff', DoStuffForDebug),
     ('/login', Login),
-    ('/logout', Logout)
+    ('/logout', Logout),
+    ('/can_use_cache/courses', CanUseCacheRequest)
 ], debug=True)
