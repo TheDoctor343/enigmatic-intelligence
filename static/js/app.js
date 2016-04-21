@@ -5,7 +5,26 @@ var appDependencies = ['ui.bootstrap'];
 var app = angular.module('app', appDependencies);
 
 function ContentController($scope, $http) {
-	$scope.state = "home";
+	
+	// Change what 'page' we are on
+	$scope.change_state = function (state) {
+		var stateObj = { page: state}
+		history.pushState(stateObj, "CLASSR", '?state='+state)
+		$scope.state = state;
+	}
+	
+	// Make the back and forward buttons work
+	window.onpopstate = function (event) {
+		console.log(event.state);
+		$scope.state = event.state.page;
+		console.log($scope.state);
+		$scope.$apply();  // this is necessary for angular to update the view
+	}
+	
+	// initially
+	$scope.change_state('home');
+	
+
 
 	$scope.classes = [
 	{
@@ -66,8 +85,8 @@ function ContentController($scope, $http) {
 	}
 	
 	$scope.go_search = function () {
-		console.log("home")
-		$scope.state = "home";
+		console.log("home");
+		$scope.change_state('home');
 	}
 
 	$scope.make_percent = function (val) {
@@ -82,7 +101,7 @@ function ContentController($scope, $http) {
 	}
 	
 	$scope.view_course = function (course) {
-		$scope.state = "view_course";
+		$scope.change_state('view_course');
 		$scope.course = course;
 	}
 }

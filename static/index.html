@@ -72,6 +72,17 @@
 							<td><a ng-click="view_course(course)">View</a></td>
 						</tr>
 					</table>
+					<br />
+					
+					<!-- New Course Modal -->
+					<h1 class="text-primary"><span class="glyphicon glyphicon-star"> </span> New Course </h1>
+
+					<div class="form-group">
+						<!-- New rating button -->
+						<button type="button" class="btn btn-default btn-md" data-toggle="modal" data-target="#myModal">
+							<span class="glyphicon glyphicon-star"></span> Create a new course
+						</button>
+					</div>
 				</div>
 
 				<!-- Show Course Page -->
@@ -208,7 +219,22 @@
 							<p>
 								Required fields are marked with a <span class="required-star">*</span> symbol.
 							</p>
-							
+							<form>
+								<div class="form-group">
+									<label><span>Easiness</span><span class="required-star">*</span><span class="text-muted"> (number from 1-10, higher is easier)</span></label>
+									<input type="number" class="form-control" />
+									<label><span>Recommend</span><span class="required-star">*</span><span class="text-muted"> (number from 1-10, higher is more commendable)</span></label>
+									<input type="number" class="form-control" />
+									<label><span>Interesting</span><span class="required-star">*</span><span class="text-muted"> (number from 1-10, higher is more interesting)</span></label>
+									<input type="number" class="form-control" />
+									<label><span>Professor</span><span class="required-star">*</span></label>
+									<input type="text" class="form-control" />
+									<label><span>Book</span></label>
+									<textarea class="form-control"></textarea>
+									<label><span>Comment</span></label>
+									<textarea class="form-control" ></textarea>
+								</div>
+							</form>
 							<div class="modal-footer" id="submit">
 								<button type="button" class="btn btn-primary" >
 									Submit
@@ -220,6 +246,29 @@
 						</div>
 					</div>
 
+				</div>
+			</div>
+
+			<!-- New Course Modal -->
+			<div id="courseModal" class="modal fade" role="dialog">
+				<div class ="modal-small">
+					<div class="modal-dialog">
+						<!-- Modal Content-->
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal">
+									&times;
+								</button>
+								<h4 class="modal-title">New Course<%= @course.name %></h4>
+							</div>
+							<div class="modal-body">
+								<p>
+									<span class="required-star">*</span>All fields are required.
+								</p>
+								<%= render 'form' %>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 
