@@ -6,28 +6,10 @@ var app = angular.module('app', appDependencies);
 
 function ContentController($scope, $http) {
 	
-	// Change what 'page' we are on
-	$scope.change_state = function (state) {
-		var stateObj = { page: state}
-		history.pushState(stateObj, "CLASSR", '?state='+state)
-		$scope.state = state;
-	}
 	
-	// Make the back and forward buttons work
-	window.onpopstate = function (event) {
-		console.log(event.state);
-		$scope.state = event.state.page;
-		console.log($scope.state);
-		$scope.$apply();  // this is necessary for angular to update the view
-	}
-	
-	// initially
-	$scope.change_state('home');
-	
-
-
 	$scope.classes = [
 	{
+		id: 0,
 		department: "CSE",
 		number: 3901,
 		name: "Web Apps",
@@ -48,11 +30,60 @@ function ContentController($scope, $http) {
 		]
 	},
 	{
+		id: 0,
 		department: "CSE",
 		number: 3902,
 		name: "Game"
 	},
 	];
+	
+	// Change what 'page' we are on
+	$scope.change_state = function (state, data) {
+		console.log(state);
+		console.log(data);
+		var stateObj = { page: state, data: data}
+		var url = '?state='+state;
+		if (data !== undefined) {
+			url += "&course="+data
+			getCourse(data); // get Course
+		}
+		history.pushState(stateObj, "CLASSR", url)
+		$scope.state = state;
+	}
+	
+	function getCourse(course_id) {
+		$scope.course = $scope.classes[0];
+	}
+	
+	// Make the back and forward buttons work
+	window.onpopstate = function (event) {
+		console.log(event.state);
+		$scope.state = event.state.page;
+		console.log($scope.state);
+		
+		if (event.state.data) {
+			
+		}
+		$scope.$apply();  // this is necessary for angular to update the view
+	}
+	
+	function getParameterByName(name) { //found on SO
+		var url = window.location.href;
+	    name = name.replace(/[\[\]]/g, "\\$&");
+	    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+	        results = regex.exec(url);
+	    if (!results) return undefined;
+	    if (!results[2]) return '';
+	    return decodeURIComponent(results[2].replace(/\+/g, " "));
+	}
+	
+	// on page load
+	var state = getParameterByName('state');
+	var course_id = getParameterByName('course');
+	console.log(state);
+	console.log(course_id)
+	$scope.change_state(state, course_id);
+	
 	
 	// var config = {
 		// method : "get",
@@ -100,9 +131,8 @@ function ContentController($scope, $http) {
 		$scope.courses = $scope.classes.filter(filter_courses);
 	}
 	
-	$scope.view_course = function (course) {
-		$scope.change_state('view_course');
-		$scope.course = course;
+	$scope.view_course = function (course_id) {
+		$scope.change_state('view_course', course_id);
 	}
 }
 
