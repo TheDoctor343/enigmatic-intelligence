@@ -1,0 +1,216 @@
+
+/*
+ * Classes for the rating bars
+ */
+.w10 {
+	width: 10%;
+}
+.w20 {
+	width: 20%;
+}
+.w30 {
+	width: 30%;
+}
+.w40 {
+	width: 40%;
+}
+.w50 {
+	width: 50%;
+}
+.w60 {
+	width: 60%;
+}
+.w70 {
+	width: 70%;
+}
+.w80 {
+	width: 80%;
+}
+.w90 {
+	width: 90%;
+}
+/* Hidden class to hide elements on the page */
+ .hidden {
+ 	display: none;
+ }
+
+/* Standardized CSS properties (sitewide) */
+html {
+	position: relative;
+	min-height: 100%;
+}
+
+body {
+	margin-bottom: 100px;
+	font-family: Arial, sans-serif;
+	background-color: #ffffff;
+}
+a {
+	color: #17599B;
+}
+a:hover {
+	color: #1E890B;
+	text-decoration: none;
+	background: none;
+}
+
+/*
+	Wrapper DIV
+	- Contains the banner on top of the page and the main content area
+*/
+#wrapper {
+	height: 100%;
+	margin: 0 auto;
+	padding: 0;
+}
+
+/*
+	Banner DIV
+	- Contains the logo, has banner image background, and also contains the search button
+	- Two sub-DIVs, banner-left and banner-right, each 6 bootstrap columns wide
+*/
+#banner {
+	width: 100%;
+	min-height: 120px;
+	background-color: #3388dd;
+}
+
+#banner-left {
+	padding: 40px 25px 0px;
+}
+
+#banner-right {
+	text-align: center;
+	position: relative;
+	min-height: 120px;
+}
+
+/*
+	Search button
+	- Courses search button that appears in the banner on all pages
+*/
+#searchbutton {
+	border: 0;
+	border-radius: 5px 5px 0px 0px;
+	position: absolute;
+	bottom: 0;
+	right: 25px;
+}
+
+/*
+	Content DIV
+	- Main content area for any page on the application
+*/
+#content {
+	padding: 10px 20px;
+}
+
+/*
+	Footer DIV
+	- Contains some basic contact information/copyright information/just some basic stuff about
+	  our group because this is just a web app for a college course
+	- Paragraphs have reduced bottom margins to be more compact
+*/
+.footer {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	min-height: 100px;
+	background-color: #444444;
+	color: #dddddd;
+	font-style: italic;
+	padding: 15px 25px;
+}
+
+.footer p {
+	margin-bottom: 0;
+}
+
+/*
+	Course Information Page
+	- Classes that modify elements used on the course information page go here
+*/
+.page-header h1 {
+	color: #2262A3;
+}
+
+.progress {
+	position: relative;
+}
+
+.progress span {
+	position: absolute;
+    display: block;
+    width: 100%;
+    color: black;
+}
+
+.rating-row {
+	border-radius: 5px;
+	padding: 10px 0;
+	background-color: #EAEAEA;
+	margin-bottom: 10px;
+}
+
+.rating-row .progress {
+	margin-bottom: 0;
+}
+
+.rating-row table {
+	margin-top: 10px;
+}
+
+.rating-row td {
+	padding: 5px;
+}
+
+.badge-up {
+	background-color: inherit !important;
+	color: #029E00 !important;
+	font-size: 1.2em !important;
+}
+
+.badge-up:hover {
+	background-color: #029E00 !important;
+	color: #FFFFFF !important;
+}
+
+.liked_this {
+	background-color: #029E00 !important;
+	color: #FFFFFF !important;
+}
+
+.badge-down {
+	margin-left: 25px;
+	background-color: inherit !important;
+	color: #FF4444 !important;
+	font-size: 1.2em !important;
+}
+
+.disliked_this {
+	background-color: #FF4444 !important;
+	color: #FFFFFF !important;
+}
+
+.badge-down:hover {
+	background-color: #FF4444 !important;
+	color: #FFFFFF !important;
+}
+
+/*
+	Modal CSS
+	- CSS for the modal used for entering course ratings
+*/
+.modal-header {
+	border-radius: 5px 5px 0 0;
+	color: #ffffff;
+	background-color: #00C200;
+}
+
+.modal-body textarea {
+	resize: none;
+}
+
+.required-star {
+	color: #CC0000;
+}
