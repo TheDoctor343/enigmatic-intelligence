@@ -73,7 +73,7 @@ function ContentController($scope, $http, $rootScope) {
 	function getCourse(course_id) {
 		/* Check Cache First */
 
-		//TODO: Cache
+		//TODO: CHECK
 
 		var config = {
 			method : 'get',
@@ -107,41 +107,90 @@ function ContentController($scope, $http, $rootScope) {
 
 	function listCourses() {
 		/* First Check cache */
-		//TODO: Check
 
-		/* Get Class List */
-		var config = {
-			method : 'get',
-			url : '/university/courses',
-			params : {
-				university : "The Ohio State University"
+		var cache = localStorage.getItem("classes");
+
+		if (cache) {
+			var config = {
+				method : 'get',
+				url : '/can_use_cache/courses',
 			}
+
+			$http(config).success(function(data) {
+				$rootScope.user = data['user'];
+				$rootScope.admin = data['admin'];
+				
+				var last_cache = new Date(localStorage.getItem('classes_cached'))
+				if (!last_cache) {
+					makeClassRequest();
+					return;
+				}
+				var updated = data['updated_at'];
+				
+				/* For JS and Python do the month slightly differently */
+				var tstring = (updated['month'])+"/"+(updated['day'])+"/"+updated['year']+" "+updated['hour']+":"+updated['minute']+":"+updated['second']+" UTC";
+				var last_updated = new Date(tstring);
+				//var date = new Date('6/29/2011 4:52:48 PM UTC');
+				
+				var time_diff = last_updated - last_cache;
+				
+				console.log(last_updated);
+				console.log(last_cache);
+				
+				if (time_diff > 0) {
+					console.log("Cache is stale");
+					makeClassRequest();
+				} else {
+					console.log("Cache is still valid");
+					$rootScope.classes = JSON.parse(cache);
+				}
+			}).error(function () {
+				makeClassRequest();
+			})
+		} else {
+			makeClassRequest();
 		}
 
-		$http(config).success(function(data) {
-			$rootScope.classes = data['courses'];
-			$rootScope.user = data['user'];
-			$rootScope.admin = data['admin'];
+		function makeClassRequest() {
+			
+			console.log("requested class list");
 
-			/* Add to Cache */
-			localStorage.setItem('classes', JSON.stringify(data['courses']))
-			localStorage.setItem('classes_cached', new Date());
-
-			if (data['user']) {
-				$rootScope.logged_in = true;
-			} else {
-				$rootScope.logged_in = false;
+			/* Get Class List */
+			var config = {
+				method : 'get',
+				url : '/university/courses',
+				params : {
+					university : "The Ohio State University"
+				}
 			}
 
-		}).error(function() {
-			swal({
-				title : "Error!",
-				text : "An Unknown Error Occurred",
-				type : "error",
-				showConfirmButton : true
+			$http(config).success(function(data) {
+				$rootScope.classes = data['courses'];
+				$rootScope.user = data['user'];
+				$rootScope.admin = data['admin'];
+
+				/* Add to Cache */
+				localStorage.setItem('classes', JSON.stringify(data['courses']))
+				localStorage.setItem('classes_cached', new Date());
+
+				if (data['user']) {
+					$rootScope.logged_in = true;
+				} else {
+					$rootScope.logged_in = false;
+				}
+
+			}).error(function() {
+				swal({
+					title : "Error!",
+					text : "An Unknown Error Occurred",
+					type : "error",
+					showConfirmButton : true
+				});
+
 			});
 
-		});
+		}
+
 	}
 
 	// Make the back and forward buttons work
