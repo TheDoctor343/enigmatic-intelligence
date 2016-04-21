@@ -73,13 +73,13 @@
 						</tr>
 					</table>
 					<br />
-					
+
 					<!-- New Course Modal -->
 					<h1 class="text-primary"><span class="glyphicon glyphicon-star"> </span> New Course </h1>
 
 					<div class="form-group">
 						<!-- New rating button -->
-						<button type="button" class="btn btn-default btn-md" data-toggle="modal" data-target="#myModal">
+						<button type="button" class="btn btn-default btn-md" data-toggle="modal" data-target="#courseModal">
 							<span class="glyphicon glyphicon-star"></span> Create a new course
 						</button>
 					</div>
@@ -259,29 +259,52 @@
 								<button type="button" class="close" data-dismiss="modal">
 									&times;
 								</button>
-								<h4 class="modal-title">New Course<%= @course.name %></h4>
+								<h4 class="modal-title">New Course</h4>
 							</div>
 							<div class="modal-body">
 								<p>
 									<span class="required-star">*</span>All fields are required.
 								</p>
-								<%= render 'form' %>
+								<div id="modal_error" class="alert alert-danger hidden">
+									Error: numerical ratings must be an integer between 1 and 10.
+								</div>
+								<p>
+									Required fields are marked with a <span class="required-star">*</span> symbol.
+								</p>
+								<form>
+									<div class="form-group">
+										<label><span>Department</span><span class="required-star">*</span></label>
+										<input type="text" class="form-control" />
+										<label><span>Number</span><span class="required-star">*</span></label>
+										<input type="number" class="form-control" />
+										<label><span>Name</span><span class="required-star">*</span></label>
+										<input type="text" class="form-control" />
+									</div>
+								</form>
+								<div class="modal-footer" id="submit">
+									<button type="button" class="btn btn-primary" >
+										Submit
+									</button>
+									<button type="button" class="btn btn-default" data-dismiss="modal">
+										Close
+									</button>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
+		</div>
 
-			<footer class="footer">
-				<div class="container">
-					<p>
-						Classr is an unregistered trademark of the Blue Screens of Life.
-					</p>
-					<p>
-						Classr was created by Wesley Pettit, Alan Zeigler, Michael Mascolino, Pavle Coric, and Zac Gioffre
-					</p>
-				</div>
-			</footer>
+		<footer class="footer">
+			<div class="container">
+				<p>
+					Classr is an unregistered trademark of the Blue Screens of Life.
+				</p>
+				<p>
+					Classr was created by Wesley Pettit, Alan Zeigler, Michael Mascolino, Pavle Coric, and Zac Gioffre
+				</p>
+			</div>
+		</footer>
 
 		</div>
 	</body>
