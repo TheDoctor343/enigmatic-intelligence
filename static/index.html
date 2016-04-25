@@ -54,10 +54,10 @@
 						<a ng-click="go_search()" id="searchbutton" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Search Courses</a>
 					</div>
 					<div ng-show="!logged_in" >
-						<a id="searchbutton" href="/login" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Login</a>
+						<a id="searchbutton" href="/login" class="btn btn-default"> Login</a>
 					</div>
 					<div ng-show="logged_in" >
-						<a id="searchbutton" href="/logout" class="btn btn-default"><span class="glyphicon glyphicon-search"></span> Logout</a>
+						<a id="searchbutton" href="/logout" class="btn btn-default"> Logout</a>
 					</div>
 				</div>
 			</div>
@@ -77,7 +77,7 @@
 					<h3><a ng-click="go_search()">Begin your journey by searching for Classes to review</a></h3>
 				</div>
 
-				<!-- Home Page -->
+				<!-- Search Page -->
 				<div ng-show="state === 'search_course'">
 					<h1 class="text-primary"><span class="glyphicon glyphicon-search"> </span> Search Courses </h1>
 					<input ng-change="course_search()" ng-model="course_search_bar" type="text" />

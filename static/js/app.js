@@ -1,5 +1,143 @@
 console.log("read app.js");
 
+/* Found on Stack Overflow */
+function UpdateQueryString(key, value, url) {
+	if (!url)
+		url = window.location.href;
+	var re = new RegExp("([?&])" + key + "=.*?(&|#|$)(.*)", "gi"),
+	    hash;
+
+	if (re.test(url)) {
+		if ( typeof value !== 'undefined' && value !== null)
+			return url.replace(re, '$1' + key + "=" + value + '$2$3');
+		else {
+			hash = url.split('#');
+			url = hash[0].replace(re, '$1$3').replace(/(&|\?)$/, '');
+			if ( typeof hash[1] !== 'undefined' && hash[1] !== null)
+				url += '#' + hash[1];
+			return url;
+		}
+	} else {
+		if ( typeof value !== 'undefined' && value !== null) {
+			var separator = url.indexOf('?') !== -1 ? '&' : '?';
+			hash = url.split('#');
+			url = hash[0] + separator + key + '=' + value;
+			if ( typeof hash[1] !== 'undefined' && hash[1] !== null)
+				url += '#' + hash[1];
+			return url;
+		} else
+			return url;
+	}
+}
+
+var wesleyRouter = angular.module("wesleyRouter", []);
+wesleyRouter.service("routeService", function($rootScope) {
+	var this_routes;
+	var allowed_routes;
+	var default_route;
+	var home_data = {};
+
+	/**
+	 * Go to state and save date in history
+	 */
+	this.go = function(state, data) {
+
+		try { /* If anything goes wrong, we just want to go home */
+
+			console.log(state);
+			console.log(data);
+			var stateObj = {
+				page : state,
+				data : data
+			}
+
+			function prepareURL(state, data) {
+				var url = UpdateQueryString("state", state, window.location.href);
+
+				if (data !== undefined) {
+					// store the data so that it will be available in the page reloads
+					if (localStorage) {
+						localStorage.setItem(state + " w-router", JSON.stringify(data));
+					} else {
+						// if we can't store in local-storage, then put in URL
+						url = UpdateQueryString("data", JSON.stringify(data), url);
+					}
+				}
+
+				return url;
+			}
+
+			function goToRoute(state, data, url) {
+				this_routes[state](state, data);
+				history.pushState(stateObj, "Classr", url);
+			}
+
+			var url = prepareURL(state, data);
+
+			if (allowed_routes[state]) {// route has been registered
+				goToRoute(state, data, url);
+			} else {// route was not registered; go home
+				url = prepareURL(default_route, home_data);
+				goToRoute(default_route, home_data, url);
+			}
+
+		} catch (err) { 
+			url = prepareURL(default_route, home_data);
+			goToRoute(default_route, home_data, url);
+		}
+	}
+	/**
+	 * Go to state and save date in history
+	 */
+	$rootScope.$go = function(state, data) {
+		this.go();
+	}
+	/**
+	 * Register the Routes for this application
+	 *
+	 * route_config: Object
+	 *
+	 * route_name: route_function(state, data)
+	 * ...
+	 * home: route_name
+	 * home_data: Object  (default data object for home route)
+	 */
+	this.registerRoutes = function(route_config) {
+		this_routes = route_config;
+		default_route = route_config['home'];
+		home_data = route_config['home_data'];
+		delete this_routes['home'];
+		delete this_routes['home_data'];
+
+		for (var prop in this_routes) {
+			if (route_config.hasOwnProperty(prop)) {
+				allowed_routes[prop] = true;
+
+				/* ng-shows are expected for each route*/
+				$rootScope[prop] = false;
+			}
+		}
+
+		onPageLoad();
+	}
+	/* Called in registerRoutes */
+	var onPageLoad = function() {
+		console.log("called init");
+		var state = getParameterByName('state');
+		var course_id = getParameterByName('course');
+		if (state == undefined) {
+			state = "home";
+		}
+		if (!( state in STATES)) {
+			state = "home";
+		}
+		console.log(state);
+		console.log(course_id)
+		$scope.change_state(state, course_id);
+
+	}
+});
+
 var appDependencies = ['ui.bootstrap'];
 
 var app = angular.module('app', appDependencies);
@@ -50,7 +188,10 @@ function ContentController($scope, $http, $rootScope) {
 		console.log(data);
 		var stateObj = {
 			page : state,
-			data : data
+			data : data,
+			user : $rootScope.user,
+			logged_in : $rootScope.logged_in,
+			admin : $rootScope.admin
 		}
 		var url = '?state=' + state;
 		if (state === "view_course" && data !== undefined) {
@@ -72,7 +213,7 @@ function ContentController($scope, $http, $rootScope) {
 	}
 	function getCourse(course_id) {
 		/* Check Cache First */
-
+		console.log("Fetching " + course_id);
 		//TODO: CHECK
 
 		var config = {
@@ -119,24 +260,24 @@ function ContentController($scope, $http, $rootScope) {
 			$http(config).success(function(data) {
 				$rootScope.user = data['user'];
 				$rootScope.admin = data['admin'];
-				
+
 				var last_cache = new Date(localStorage.getItem('classes_cached'))
 				if (!last_cache) {
 					makeClassRequest();
 					return;
 				}
 				var updated = data['updated_at'];
-				
+
 				/* For JS and Python do the month slightly differently */
-				var tstring = (updated['month'])+"/"+(updated['day'])+"/"+updated['year']+" "+updated['hour']+":"+updated['minute']+":"+updated['second']+" UTC";
+				var tstring = (updated['month']) + "/" + (updated['day']) + "/" + updated['year'] + " " + updated['hour'] + ":" + updated['minute'] + ":" + updated['second'] + " UTC";
 				var last_updated = new Date(tstring);
 				//var date = new Date('6/29/2011 4:52:48 PM UTC');
-				
+
 				var time_diff = last_updated - last_cache;
-				
+
 				console.log(last_updated);
 				console.log(last_cache);
-				
+
 				if (time_diff > 0) {
 					console.log("Cache is stale");
 					makeClassRequest();
@@ -144,7 +285,7 @@ function ContentController($scope, $http, $rootScope) {
 					console.log("Cache is still valid");
 					$rootScope.classes = JSON.parse(cache);
 				}
-			}).error(function () {
+			}).error(function() {
 				makeClassRequest();
 			})
 		} else {
@@ -152,7 +293,7 @@ function ContentController($scope, $http, $rootScope) {
 		}
 
 		function makeClassRequest() {
-			
+
 			console.log("requested class list");
 
 			/* Get Class List */
@@ -195,12 +336,15 @@ function ContentController($scope, $http, $rootScope) {
 
 	// Make the back and forward buttons work
 	window.onpopstate = function(event) {
+		console.log("pop state called");
 		console.log(event.state);
 		$scope.state = event.state.page;
 		console.log($scope.state);
 
 		if (event.state.data) {
-
+			getCourse(event.state.data);
+		} else if (event.state.page == "search_course") {
+			listCourses();
 		}
 		$scope.$apply();
 		// this is necessary for angular to update the view
@@ -218,6 +362,7 @@ function ContentController($scope, $http, $rootScope) {
 	}
 
 	function init() {
+		console.log("called init");
 		var state = getParameterByName('state');
 		var course_id = getParameterByName('course');
 		if (state == undefined) {
@@ -256,6 +401,10 @@ function ContentController($scope, $http, $rootScope) {
 		}
 	}
 
+
+	$scope.$test = function() {
+		console.log("test");
+	}
 
 	$scope.go_search = function() {
 		console.log("search_course");

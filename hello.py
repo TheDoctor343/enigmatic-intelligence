@@ -136,7 +136,7 @@ class CourseRequest(webapp2.RequestHandler):
         university = university_key.get()
 
         if not university:
-            pass
+            self.abort(404, detail="University not found")
 
         obj = []
 
