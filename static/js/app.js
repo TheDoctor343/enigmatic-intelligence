@@ -30,19 +30,34 @@ function UpdateQueryString(key, value, url) {
 	}
 }
 
+function getParameterByName(name) {//found on SO
+	var url = window.location.href;
+	name = name.replace(/[\[\]]/g, "\\$&");
+	var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+	    results = regex.exec(url);
+	if (!results)
+		return undefined;
+	if (!results[2])
+		return '';
+	return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
 var wesleyRouter = angular.module("wesleyRouter", []);
 wesleyRouter.service("routeService", function($rootScope) {
 	var this_routes;
 	var allowed_routes;
 	var default_route;
 	var home_data = {};
+	
+	/* wonky JS thing */
+	var that = this;
 
 	/**
 	 * Go to state and save date in history
 	 */
 	this.go = function(state, data) {
 
-		try { /* If anything goes wrong, we just want to go home */
+		try {/* If anything goes wrong, we just want to go home */
 
 			console.log(state);
 			console.log(data);
@@ -70,6 +85,7 @@ wesleyRouter.service("routeService", function($rootScope) {
 			function goToRoute(state, data, url) {
 				this_routes[state](state, data);
 				history.pushState(stateObj, "Classr", url);
+				$rootScope.state = state;
 			}
 
 			var url = prepareURL(state, data);
@@ -81,7 +97,7 @@ wesleyRouter.service("routeService", function($rootScope) {
 				goToRoute(default_route, home_data, url);
 			}
 
-		} catch (err) { 
+		} catch (err) {
 			url = prepareURL(default_route, home_data);
 			goToRoute(default_route, home_data, url);
 		}
@@ -90,7 +106,7 @@ wesleyRouter.service("routeService", function($rootScope) {
 	 * Go to state and save date in history
 	 */
 	$rootScope.$go = function(state, data) {
-		this.go();
+		that.go();
 	}
 	/**
 	 * Register the Routes for this application
@@ -118,22 +134,40 @@ wesleyRouter.service("routeService", function($rootScope) {
 			}
 		}
 
+		// Make the back and forward buttons work
+		window.onpopstate = function(event) {
+			console.log("pop state called");
+			console.log(event.state);
+			
+			try {
+				
+			
+			$rootScope.state = event.state.page;
+			
+			this_routes[event.state.page](event.state.page, event.state.data);
+			
+			} catch (err) {
+				that.go(default_route, home_data);
+			}
+			$rootScope.$apply();
+		}
 		onPageLoad();
 	}
 	/* Called in registerRoutes */
 	var onPageLoad = function() {
-		console.log("called init");
 		var state = getParameterByName('state');
-		var course_id = getParameterByName('course');
-		if (state == undefined) {
-			state = "home";
+		var data = undefined;
+
+		if (localStorage) {
+			if (localStorage.getItem(state + " w-router")) {
+				data = JSON.parse(localStorage.getItem(state + " w-router"));
+			}
+		} else {// might be in URL
+			data = getParameterByName('data');
 		}
-		if (!( state in STATES)) {
-			state = "home";
-		}
-		console.log(state);
-		console.log(course_id)
-		$scope.change_state(state, course_id);
+
+		/* data may remain undefined- in some cases this will be the desired behavior */
+		that.go(state, data);
 
 	}
 });
